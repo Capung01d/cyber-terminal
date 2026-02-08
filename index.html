@@ -31,7 +31,7 @@
         <div class="max-w-xl w-full glass p-8 rounded-2xl border-t-2 border-green-500/50 relative overflow-hidden">
             <div class="scanline"></div>
             <div class="text-center mb-8">
-                <div class="inline-block px-3 py-1 border border-green-500/30 rounded-full text-[10px] text-green-500 tracking-[0.5em] mb-4 uppercase">System Verification</div>
+                <div class="inline-block px-3 py-1 border border-green-500/30 rounded-full text-[10px] text-green-500 tracking-[0.5em] mb-4 uppercase text-glow">System Verification</div>
                 <h1 class="text-4xl font-black text-white glow-text tracking-tighter">MAZKIPLKAY<span class="text-green-500 italic">CYBER</span></h1>
             </div>
             <div class="space-y-4 mb-8 text-sm text-gray-400 leading-relaxed max-h-60 overflow-y-auto custom-scroll pr-2">
@@ -42,7 +42,7 @@
             </div>
             <div class="space-y-4">
                 <label class="flex items-center gap-3 cursor-pointer select-none text-[11px] text-gray-500">
-                    <input type="checkbox" id="check-agree" class="w-4 h-4 accent-green-500">
+                    <input type="checkbox" id="check-agree" class="w-4 h-4 accent-green-500 rounded border-gray-700 bg-gray-900">
                     <span>Saya setuju dengan protokol siber yang berlaku.</span>
                 </label>
                 <button onclick="unlockTerminal()" id="btn-unlock" disabled class="w-full py-4 cyber-btn bg-green-600/10 border border-green-500 text-green-500 font-bold rounded-lg uppercase tracking-widest text-xs disabled:opacity-20">Initialize Connection</button>
@@ -77,26 +77,54 @@
 
     <script>
         // =========================================================================
-        // TEMPEL API KEY LO DI BAWAH INI (HANYA DI SINI)
+        // 1. TEMPEL API KEY LO DI BAWAH INI (Antara tanda kutip)
         // =========================================================================
-        const apiKey = "AIzaSyDINRKcVKNFIrxWUoyeSg9R03IYCHGR_DU"; 
+        const apiKey = "AIzaSyByORHox-PdyVEQEOzeaEyYF75X3ec3Mdc"; 
         // =========================================================================
 
         const chatDisplay = document.getElementById('chat-display');
         const mainInput = document.getElementById('main-input');
         const aiLoading = document.getElementById('ai-loading');
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
 
-        // Clock & Particles logic
         setInterval(() => { document.getElementById('clock').innerText = new Date().toTimeString().split(' ')[0]; }, 1000);
         function unlockTerminal() { document.getElementById('auth-gate').style.display = 'none'; document.getElementById('terminal-ui').classList.remove('hidden'); }
         document.getElementById('check-agree').addEventListener('change', (e) => { document.getElementById('btn-unlock').disabled = !e.target.checked; });
 
+        // Background Particles
+        let particles = [];
+        function initParticles() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<50; i++) {
+                particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 2, speed: Math.random() * 0.5 + 0.1 });
+            }
+        }
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ff41';
+            particles.forEach(p => {
+                p.y -= p.speed;
+                if(p.y < 0) p.y = canvas.height;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        window.addEventListener('resize', initParticles);
+        initParticles();
+        animateParticles();
+
         const PROMPT_CONFIG = "Karakter: Mazkiplay Assistant, Red Team expert, Friendly Bro style. Watermark penutup: by, mazkiplay.";
 
         async function fetchAI(msg) {
-            if (!apiKey || apiKey.includes("ISI_API_KEY")) return "Error: API Key belum diisi, Bro! Periksa file index.html.";
+            // Validasi Input Key
+            if (!apiKey || apiKey === "" || apiKey.includes("ISI_API_KEY")) {
+                return "🚨 [SYSTEM_ERROR]: API Key kosong atau belum diinput di file index.html baris 111, Bro!";
+            }
             
-            // Menggunakan Gemini 1.5 Flash (Sangat stabil & Gratis)
+            // Menggunakan API v1beta yang paling stabil untuk Free Tier
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
             try {
@@ -109,25 +137,33 @@
                     })
                 });
 
+                const data = await response.json();
+
                 if (!response.ok) {
-                    const err = await response.json();
-                    return `Error ${response.status}: Key lo mungkin belum aktif atau salah ketik, Bro.`;
+                    // Cek jenis error spesifik dari Google
+                    if (data.error?.status === "PERMISSION_DENIED" || data.error?.message?.includes("API key")) {
+                        return "🚨 [AUTH_FAILED]: API Key lo ditolak oleh Google. Cek apakah ada spasi yang ikut ter-copy atau kuncinya belum aktif.";
+                    }
+                    if (response.status === 429) {
+                        return "🚨 [LIMIT_EXCEEDED]: Lo nanya terlalu cepet, Bro. Tunggu semenit ya!";
+                    }
+                    return `🚨 [CONNECTION_FAILED]: Error ${response.status}. Pesan: ${data.error?.message || 'Unknown'}`;
                 }
 
-                const data = await response.json();
-                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Signal Lost.";
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Signal Lost: Server tidak mengirimkan data.";
             } catch (e) {
-                return "Fatal Link Error: Cek internet atau API Key lo.";
+                console.error(e);
+                return "🚨 [FATAL_ERROR]: Gagal menghubungi server Google. Pastikan internet lo stabil atau tidak terhalang Firewall/VPN.";
             }
         }
 
         function createMsg(role, text) {
             const div = document.createElement('div');
             div.className = role === 'user' ? 'flex flex-col items-end' : 'flex flex-col items-start';
-            const inner = `<span class="text-[9px] opacity-40 mb-1 mono">${role === 'user' ? 'LOCAL_USER' : 'MAZKIPLAY_AI'}</span>
-                           <div class="${role === 'user' ? 'bg-white/5 border-white/10' : 'bg-green-500/5 border-green-500/20 text-green-100'} p-4 rounded-xl border text-sm max-w-[85%]">
+            const inner = `<span class="text-[9px] opacity-40 mb-1 mono uppercase">${role === 'user' ? 'Local_User' : 'Mazkiplay_AI'}</span>
+                           <div class="${role === 'user' ? 'bg-white/5 border-white/10' : 'bg-green-500/5 border-green-500/20 text-green-100'} p-4 rounded-xl border text-sm max-w-[85%] shadow-lg">
                            ${text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/```(.*?)```/gs, '<div class="code-snippet">$1</div>').replace(/\n/g, '<br>')}
-                           ${role === 'ai' ? '<div class="text-[8px] text-right mt-2 opacity-50">by, mazkiplay</div>' : ''}
+                           ${role === 'ai' ? '<div class="text-[8px] text-right mt-2 opacity-50 italic">by, mazkiplay</div>' : ''}
                            </div>`;
             div.innerHTML = inner;
             return div;
