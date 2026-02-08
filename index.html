@@ -55,7 +55,7 @@
         <div class="glass-header px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-4">
                 <div class="flex gap-1.5"><div class="w-3 h-3 rounded-full bg-red-500"></div><div class="w-3 h-3 rounded-full bg-yellow-500"></div><div class="w-3 h-3 rounded-full bg-green-500"></div></div>
-                <h2 class="mono text-xs font-bold text-green-500 tracking-widest uppercase">MAZKIPLKAY_ASSISTANT_V4.0</h2>
+                <h2 class="mono text-xs font-bold text-green-500 tracking-widest uppercase">MAZKIPLKAY_ASSISTANT_V5.0</h2>
             </div>
             <div class="text-right"><span id="clock" class="mono text-xs text-white font-bold">00:00:00</span></div>
         </div>
@@ -116,15 +116,15 @@
         initParticles();
         animateParticles();
 
-        const SYSTEM_PROMPT = "Kamu adalah Mazkiplay Assistant, seorang ahli Red Team dan Ethical Hacking. Berbicaralah dengan gaya santai tapi profesional (panggil 'Bro'). Akhiri jawabanmu dengan 'by, mazkiplay'.";
+        const SYSTEM_PROMPT = "Kamu adalah Mazkiplay Assistant, seorang ahli Red Team dan Ethical Hacking. Berbicaralah dengan gaya santai tapi profesional (panggil 'Bro'). Selalu akhiri jawabanmu dengan kalimat 'by, mazkiplay'.";
 
         async function fetchAI(userMsg) {
             if (!apiKey || apiKey === "" || apiKey.includes("ISI_API_KEY")) {
                 return "🚨 [SYSTEM_ERROR]: API Key belum diinput di file index.html baris 111.";
             }
             
-            // MENGGUNAKAN JALUR V1 DAN MODEL GEMINI-1.5-FLASH YANG PALING STABIL
-            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // JALUR API V1 DENGAN FALLBACK MODEL LATEST
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
             try {
                 const response = await fetch(url, {
@@ -132,15 +132,25 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{
-                            parts: [{ text: `${SYSTEM_PROMPT}\nUser Question: ${userMsg}` }]
-                        }]
+                            parts: [{ text: `${SYSTEM_PROMPT}\n\nQuestion: ${userMsg}` }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 2048,
+                        }
                     })
                 });
 
                 const data = await response.json();
 
                 if (!response.ok) {
-                    console.error("DEBUG:", data);
+                    console.error("DEBUG_ERROR:", data);
+                    // Jika v1beta gagal, kita coba tembak v1 dengan model yang sama
+                    if (response.status === 404) {
+                        return await fetchAIFallback(userMsg);
+                    }
                     return `🚨 [CONNECTION_FAILED]: Error ${response.status} - ${data.error?.message || 'Gagal terhubung'}`;
                 }
 
@@ -149,7 +159,26 @@
 
             } catch (e) {
                 console.error("FATAL:", e);
-                return "🚨 [FATAL_ERROR]: Gagal menghubungi server Google. Cek koneksi internet lo.";
+                return "🚨 [FATAL_ERROR]: Gagal menghubungi server Google. Cek koneksi internet lo Bro.";
+            }
+        }
+
+        // FUNGSI FALLBACK JIKA ENDPOINT UTAMA GAGAL (FORCE TO V1)
+        async function fetchAIFallback(userMsg) {
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `${SYSTEM_PROMPT}\n\nQuestion: ${userMsg}` }] }]
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok) return `🚨 [STILL_FAILED]: Jalur v1 & v1beta ditutup. Pesan: ${data.error?.message}`;
+                return data.candidates?.[0]?.content?.parts?.[0]?.text;
+            } catch (e) {
+                return "🚨 [CRITICAL_ERROR]: Semua jalur API gagal.";
             }
         }
 
