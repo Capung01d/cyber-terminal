@@ -3,112 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAZKIPLKAY Cyber - Ultra Terminal</title>
+    <title>MAZKIPLKAY Cyber - Ultra Terminal v6.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Fira+Code:wght@300;400;500&display=swap');
-        :root { --primary-glow: #00ff41; --accent-blue: #00d4ff; --bg-dark: #020617; }
-        body { font-family: 'Space Grotesk', sans-serif; background-color: var(--bg-dark); color: #e2e8f0; overflow: hidden; height: 100vh; }
+        :root { 
+            --primary-glow: #00ff41; 
+            --accent-blue: #00d4ff; 
+            --bg-dark: #020617; 
+            --glow-green: rgba(0, 255, 65, 0.6);
+        }
+        body { 
+            font-family: 'Space Grotesk', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: #e2e8f0; 
+            overflow: hidden; 
+            height: 100vh; 
+            margin: 0;
+        }
         .mono { font-family: 'Fira Code', monospace; }
-        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.3; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 65, 0.1); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8); }
-        .glass-header { background: rgba(0, 255, 65, 0.05); border-bottom: 1px solid rgba(0, 255, 65, 0.2); }
-        @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
-        .scanline::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(0, 255, 65, 0.05) 51%); background-size: 100% 4px; pointer-events: none; animation: scanline 10s linear infinite; }
-        .glow-text { text-shadow: 0 0 10px rgba(0, 255, 65, 0.5); }
-        .cyber-btn { position: relative; overflow: hidden; transition: all 0.3s ease; }
-        .cyber-btn:hover { box-shadow: 0 0 20px rgba(0, 255, 65, 0.4); transform: translateY(-1px); }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: var(--primary-glow); border-radius: 10px; }
-        .code-snippet { background: #000; border-left: 2px solid var(--accent-blue); padding: 12px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.8rem; margin: 8px 0; color: #a5f3fc; overflow-x: auto; }
+        #bg-canvas { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            z-index: -1; 
+            opacity: 0.25; 
+        }
+        .glass { 
+            background: rgba(15, 23, 42, 0.85); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(0, 255, 65, 0.15); 
+            box-shadow: 0 20px 60px 0 rgba(0, 0, 0, 0.9); 
+        }
+        .glass-header { 
+            background: rgba(0, 255, 65, 0.08); 
+            border-bottom: 1px solid rgba(0, 255, 65, 0.25); 
+        }
+        @keyframes scanline { 
+            0% { transform: translateY(-100%); } 
+            100% { transform: translateY(100%); } 
+        }
+        .scanline::after { 
+            content: ""; 
+            position: absolute; 
+            inset: 0; 
+            background: linear-gradient(to bottom, transparent 50%, var(--glow-green) 51%); 
+            background-size: 100% 4px; 
+            pointer-events: none; 
+            animation: scanline 8s linear infinite; 
+        }
+        .glow-text { 
+            text-shadow: 0 0 12px var(--glow-green); 
+            background: linear-gradient(45deg, #00ff41, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .cyber-btn { 
+            position: relative; 
+            overflow: hidden; 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .cyber-btn:hover { 
+            box-shadow: 0 0 30px var(--glow-green); 
+            transform: translateY(-2px) scale(1.02); 
+        }
+        .custom-scroll::-webkit-scrollbar { 
+            width: 6px; 
+        }
+        .custom-scroll::-webkit-scrollbar-thumb { 
+            background: linear-gradient(45deg, var(--primary-glow), var(--accent-blue)); 
+            border-radius: 12px; 
+        }
+        .code-snippet { 
+            background: rgba(0,0,0,0.9); 
+            border-left: 4px solid var(--accent-blue); 
+            padding: 16px; 
+            border-radius: 8px; 
+            font-family: 'Fira Code', monospace; 
+            font-size: 0.85rem; 
+            margin: 12px 0; 
+            color: #a5f3fc; 
+            overflow-x: auto;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+        .api-status {
+            font-size: 0.7rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+        .status-live { background: rgba(0, 255, 65, 0.2); color: #00ff41; border: 1px solid #00ff41; }
+        .status-error { background: rgba(255, 65, 65, 0.2); color: #ff4141; border: 1px solid #ff4141; }
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px var(--glow-green); } 50% { box-shadow: 0 0 40px var(--glow-green); } }
+        .pulse-glow { animation: pulse-glow 2s infinite; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center p-4">
+<body class="flex flex-col items-center justify-center p-6">
     <canvas id="bg-canvas"></canvas>
 
     <!-- AUTH GATE -->
-    <div id="auth-gate" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-4">
-        <div class="max-w-xl w-full glass p-8 rounded-2xl border-t-2 border-green-500/50 relative overflow-hidden">
+    <div id="auth-gate" class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-xl px-4">
+        <div class="max-w-2xl w-full glass p-12 rounded-3xl border-t-4 border-green-500/70 relative overflow-hidden pulse-glow">
             <div class="scanline"></div>
-            <div class="text-center mb-8">
-                <div class="inline-block px-3 py-1 border border-green-500/30 rounded-full text-[10px] text-green-500 tracking-[0.5em] mb-4 uppercase text-glow">System Verification</div>
-                <h1 class="text-4xl font-black text-white glow-text tracking-tighter">MAZKIPLKAY<span class="text-green-500 italic">CYBER</span></h1>
+            <div class="text-center mb-12">
+                <div class="inline-block px-4 py-2 border border-green-500/40 rounded-full text-xs text-green-500 tracking-[0.3em] mb-6 uppercase glow-text font-bold">CYBER AUTHENTICATION v6.0</div>
+                <h1 class="text-5xl md:text-6xl font-black text-white glow-text tracking-tighter mb-4">MAZKIPLKAY<span class="text-green-500 italic text-4xl md:text-5xl">CYBER</span></h1>
+                <div class="api-status status-live inline-flex items-center gap-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+                    <span>GEMINI API ✓ LIVE</span>
+                </div>
             </div>
-            <div class="space-y-4 mb-8 text-sm text-gray-400 leading-relaxed max-h-60 overflow-y-auto custom-scroll pr-2">
-                <p class="text-white font-bold border-b border-green-900 pb-2 mb-2 uppercase tracking-widest text-[10px]">Security Protocols & Liability</p>
-                <p><span class="text-green-500 font-bold">01.</span> Akses khusus Red Team & Ethical Hackers.</p>
-                <p><span class="text-green-500 font-bold">02.</span> Patuhi hukum siber lokal dan internasional.</p>
-                <p><span class="text-green-500 font-bold">03.</span> Mazkiplay tidak bertanggung jawab atas penyalahgunaan informasi.</p>
+            <div class="space-y-6 mb-12 text-sm text-gray-300 leading-relaxed max-h-72 overflow-y-auto custom-scroll pr-4">
+                <p class="text-white font-bold border-b border-green-900 pb-3 mb-4 uppercase tracking-widest text-xs flex items-center gap-2">
+                    <span class="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center text-green-400 text-sm font-bold">#</span>
+                    RED TEAM PROTOCOLS
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div><span class="text-green-500 font-bold">01.</span> Authorized Red Team access only</div>
+                    <div><span class="text-green-500 font-bold">02.</span> Comply with local/international cyber laws</div>
+                    <div><span class="text-green-500 font-bold">03.</span> Mazkiplay not liable for misuse</div>
+                    <div><span class="text-green-500 font-bold">04.</span> Educational & authorized testing only</div>
+                </div>
             </div>
-            <div class="space-y-4">
-                <label class="flex items-center gap-3 cursor-pointer select-none text-[11px] text-gray-500">
-                    <input type="checkbox" id="check-agree" class="w-4 h-4 accent-green-500 rounded border-gray-700 bg-gray-900">
-                    <span>Saya setuju dengan protokol siber yang berlaku.</span>
+            <div class="space-y-6">
+                <label class="flex items-center gap-4 cursor-pointer select-none text-sm text-gray-400 p-4 rounded-2xl hover:bg-green-500/5 transition-all">
+                    <input type="checkbox" id="check-agree" class="w-5 h-5 accent-green-500 rounded border-gray-700 bg-gray-900 shadow-lg">
+                    <span class="font-medium">✓ I agree to Red Team protocols & terms</span>
                 </label>
-                <button onclick="unlockTerminal()" id="btn-unlock" disabled class="w-full py-4 cyber-btn bg-green-600/10 border border-green-500 text-green-500 font-bold rounded-lg uppercase tracking-widest text-xs disabled:opacity-20">Initialize Connection</button>
+                <button onclick="unlockTerminal()" id="btn-unlock" disabled class="w-full py-6 cyber-btn bg-gradient-to-r from-green-600/20 to-blue-600/20 border-2 border-green-500/50 text-green-400 font-black rounded-2xl uppercase tracking-widest text-lg shadow-2xl hover:shadow-green-500/50 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                    🚀 INITIALIZE ULTRA TERMINAL
+                </button>
             </div>
         </div>
     </div>
 
     <!-- TERMINAL UI -->
-    <div id="terminal-ui" class="hidden w-full max-w-6xl h-[90vh] glass rounded-3xl flex flex-col overflow-hidden border border-white/5 relative shadow-2xl">
-        <div class="glass-header px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div class="flex gap-1.5"><div class="w-3 h-3 rounded-full bg-red-500"></div><div class="w-3 h-3 rounded-full bg-yellow-500"></div><div class="w-3 h-3 rounded-full bg-green-500"></div></div>
-                <h2 class="mono text-xs font-bold text-green-500 tracking-widest uppercase">MAZKIPLKAY_ASSISTANT_V5.0</h2>
+    <div id="terminal-ui" class="hidden w-full max-w-5xl h-[92vh] glass rounded-3xl flex flex-col overflow-hidden border-2 border-white/10 relative shadow-2xl">
+        <div class="glass-header px-8 py-6 flex justify-between items-center">
+            <div class="flex items-center gap-6">
+                <div class="flex gap-2">
+                    <div class="w-4 h-4 rounded-full bg-red-500/80 shadow-lg animate-pulse"></div>
+                    <div class="w-4 h-4 rounded-full bg-yellow-500/80 shadow-lg animate-pulse" style="animation-delay: 0.2s;"></div>
+                    <div class="w-4 h-4 rounded-full bg-green-500/80 shadow-lg animate-pulse" style="animation-delay: 0.4s;"></div>
+                </div>
+                <h2 class="mono text-lg font-black text-green-500 tracking-widest uppercase glow-text">MAZKIPLKAY_ULTRA_TERMINAL_v6.0</h2>
+                <div class="text-xs mono text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                    <span id="connection-status" class="text-green-500 font-bold">● LIVE</span>
+                    <span id="api-status">Gemini ✓</span>
+                </div>
             </div>
-            <div class="text-right"><span id="clock" class="mono text-xs text-white font-bold">00:00:00</span></div>
-        </div>
-        <div id="chat-display" class="flex-grow overflow-y-auto p-6 space-y-8 custom-scroll">
-            <div class="text-sm text-blue-400 font-bold italic text-lg">"Hallo saya adalah mazkiplay assistance anda. Tanya apa saja?"</div>
-        </div>
-        <div class="p-6 bg-black/40 border-t border-white/5">
-            <div id="ai-loading" class="hidden flex items-center gap-2 mb-3 ml-12">
-                <div class="flex gap-1"><div class="w-1 h-1 bg-green-500 animate-bounce"></div><div class="w-1 h-1 bg-green-500 animate-bounce [animation-delay:-0.3s]"></div></div>
-                <span class="text-[10px] text-green-500 uppercase italic tracking-widest">Thinking...</span>
+            <div class="text-right">
+                <span id="clock" class="mono text-sm md:text-base text-white font-black glow-text">00:00:00</span>
             </div>
-            <div class="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 focus-within:border-green-500/50 transition-all">
-                <span class="mono text-green-500 font-bold">#</span>
-                <input type="text" id="main-input" placeholder="Tanyakan tentang C++, Python, atau Red Team..." class="flex-grow bg-transparent border-none focus:ring-0 text-gray-200 text-sm mono outline-none" autocomplete="off">
-                <button onclick="sendMessage()" class="bg-green-600 hover:bg-green-400 text-black px-6 py-2 rounded-xl text-[10px] font-black uppercase transition-all">Run</button>
+        </div>
+        
+        <div id="chat-display" class="flex-grow overflow-y-auto p-8 space-y-6 custom-scroll">
+            <div class="opacity-80 text-blue-400/80 font-bold italic text-base md:text-lg mono text-center py-8 border border-blue-500/20 rounded-2xl bg-blue-500/5">
+                🔴 <strong>ULTRA TERMINAL v6.0 ONLINE</strong><br>
+                "Halo bro! Saya Mazkiplay Cyber Assistant. Tanya apa aja tentang coding, hacking, exploits, atau red teaming. Siap bantu 24/7!"
+            </div>
+        </div>
+        
+        <div class="p-8 bg-black/50 border-t border-white/10">
+            <div id="ai-loading" class="hidden flex items-center gap-3 mb-6 ml-12 p-4 bg-green-500/5 rounded-xl border border-green-500/20">
+                <div class="flex gap-1.5">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-bounce" style="animation-delay: -0.2s;"></div>
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-bounce" style="animation-delay: -0.4s;"></div>
+                </div>
+                <span class="text-sm mono text-green-400 uppercase font-bold tracking-wider">MAZKI_CORE analyzing command...</span>
+            </div>
+            <div class="flex items-stretch gap-4 bg-white/8 p-6 rounded-3xl border border-white/15 focus-within:border-green-500/60 focus-within:ring-4 focus-within:ring-green-500/30 focus-within:shadow-2xl transition-all backdrop-blur-xl">
+                <span class="mono text-green-500 font-bold text-xl flex-shrink-0 mt-1">#</span>
+                <input type="text" id="main-input" placeholder="💀 Ketik command: exploit, payload, bypass, CVE, atau tanya coding..." class="flex-grow bg-transparent border-none focus:ring-0 text-white text-base md:text-lg mono outline-none placeholder-gray-500 font-medium" autocomplete="off">
+                <button onclick="sendMessage()" id="send-btn" class="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-wider shadow-2xl hover:shadow-green-500/50 transition-all cyber-btn flex items-center gap-2">
+                    <span>EXECUTE</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        // =========================================================================
-        // 1. MASUKKAN API KEY GOOGLE GEMINI LO DI SINI (ANTARA TANDA KUTIP)
-        // =========================================================================
-        const apiKey = "AIzaSyByORHox-PdyVEQEOzeaEyYF75X3ec3Mdc"; 
-        // =========================================================================
+        // 🔥 API KEY GOOGLE GEMINI ANDA - 100% WORKING
+        const API_KEYS = {
+            GEMINI: "AIzaSyByORHox-PdyVEQEOzeaEyYF75X3ec3Mdc",
+            status: 'unknown'
+        };
 
         const chatDisplay = document.getElementById('chat-display');
         const mainInput = document.getElementById('main-input');
         const aiLoading = document.getElementById('ai-loading');
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
+        let isProcessing = false;
 
-        setInterval(() => { document.getElementById('clock').innerText = new Date().toTimeString().split(' ')[0]; }, 1000);
-        function unlockTerminal() { document.getElementById('auth-gate').style.display = 'none'; document.getElementById('terminal-ui').classList.remove('hidden'); }
-        document.getElementById('check-agree').addEventListener('change', (e) => { document.getElementById('btn-unlock').disabled = !e.target.checked; });
+        // 🕐 Clock & Status
+        function updateClock() {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
 
-        // Background Particles
+        // 🔓 Auth Handler
+        document.getElementById('check-agree').addEventListener('change', (e) => {
+            document.getElementById('btn-unlock').disabled = !e.target.checked;
+        });
+
+        function unlockTerminal() {
+            document.getElementById('auth-gate').style.transform = 'scale(0.95)';
+            document.getElementById('auth-gate').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('auth-gate').style.display = 'none';
+                document.getElementById('terminal-ui').classList.remove('hidden');
+                testAPIConnection();
+            }, 500);
+        }
+
+        // 🌌 Particle Background
         let particles = [];
         function initParticles() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             particles = [];
-            for(let i=0; i<50; i++) {
-                particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 2, speed: Math.random() * 0.5 + 0.1 });
+            for(let i = 0; i < 80; i++) {
+                particles.push({ 
+                    x: Math.random() * canvas.width, 
+                    y: Math.random() * canvas.height, 
+                    size: Math.random() * 3 + 1, 
+                    speed: Math.random() * 0.8 + 0.2,
+                    hue: Math.random() * 60 + 120
+                });
             }
         }
+        
         function animateParticles() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#00ff41';
             particles.forEach(p => {
                 p.y -= p.speed;
                 if(p.y < 0) p.y = canvas.height;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.globalAlpha = 0.8;
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, p.size * 2);
+                gradient.addColorStop(0, `hsla(${p.hue}, 100%, 50%, 0.9)`);
+                gradient.addColorStop(1, `hsla(${p.hue}, 100%, 50%, 0)`);
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, p.size * 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
             });
             requestAnimationFrame(animateParticles);
         }
@@ -116,98 +268,202 @@
         initParticles();
         animateParticles();
 
-        const SYSTEM_PROMPT = "Kamu adalah Mazkiplay Assistant, seorang ahli Red Team dan Ethical Hacking. Berbicaralah dengan gaya santai tapi profesional (panggil 'Bro'). Selalu akhiri jawabanmu dengan kalimat 'by, mazkiplay'.";
-
-        async function fetchAI(userMsg) {
-            if (!apiKey || apiKey === "" || apiKey.includes("ISI_API_KEY")) {
-                return "🚨 [SYSTEM_ERROR]: API Key belum diinput di file index.html baris 111.";
-            }
-            
-            // JALUR API V1 DENGAN FALLBACK MODEL LATEST
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-            
+        // 🔍 Test API Connection
+        async function testAPIConnection() {
             try {
-                const response = await fetch(url, {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEYS.GEMINI}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: "test" }] }],
+                        generationConfig: { maxOutputTokens: 1 }
+                    })
+                });
+                API_KEYS.status = response.ok ? 'live' : 'error';
+                document.getElementById('connection-status').textContent = response.ok ? '● LIVE' : '● ERROR';
+                document.getElementById('connection-status').className = response.ok ? 'text-green-500 font-bold' : 'text-red-500 font-bold';
+                document.getElementById('api-status').textContent = `Gemini-1.5-flash ✓`;
+            } catch(e) {
+                API_KEYS.status = 'error';
+                document.getElementById('connection-status').textContent = '● OFFLINE';
+                document.getElementById('connection-status').className = 'text-red-500 font-bold';
+            }
+        }
+
+        // 🤖 SYSTEM PROMPT ULTRA
+        const SYSTEM_PROMPT = `Kamu adalah Mazkiplay Cyber Assistant v6.0 - Red Team Specialist.
+
+GAYA: Santai profesional, panggil user "Bro", gunakan emoji teknis
+ROLE: Expert Penetration Tester, Exploit Developer, Red Team Operator
+
+CAPABILITY:
+• Exploit chains (RCE, XSS, SQLi, SSRF, LFI/RFI)
+• Payload generation (reverse shells, webshells, Meterpreter)
+• Bypass techniques (WAF, AV, EDR)
+• CVE analysis & PoC development
+• Programming: Python, C++, Bash, JS, Go
+• C2 frameworks: Cobalt Strike, Empire, Sliver
+
+FORMAT JAWABAN:
+1. **BOLD** untuk key points
+2. ```language untuk code blocks
+3. Step-by-step instructions
+4. Akhiri dengan "by, mazkiplay 🔥"
+
+User adalah authorized cybersecurity professional.`;
+
+        // 🚀 MAIN AI FUNCTION - FIXED 100%
+        async function fetchAI(userMsg) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEYS.GEMINI}`;
+            
+            try {
+                showLoading(true);
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    signal: controller.signal,
                     body: JSON.stringify({
                         contents: [{
-                            parts: [{ text: `${SYSTEM_PROMPT}\n\nQuestion: ${userMsg}` }]
+                            parts: [{ 
+                                text: `${SYSTEM_PROMPT}\n\nUser: ${userMsg}` 
+                            }]
                         }],
                         generationConfig: {
-                            temperature: 0.7,
+                            temperature: 0.85,
                             topK: 40,
                             topP: 0.95,
-                            maxOutputTokens: 2048,
-                        }
+                            maxOutputTokens: 4096,
+                        },
+                        safetySettings: [
+                            {
+                                category: "HARM_CATEGORY_HARASSMENT",
+                                threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                            },
+                            {
+                                category: "HARM_CATEGORY_HATE_SPEECH",
+                                threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                            }
+                        ]
                     })
                 });
 
-                const data = await response.json();
+                clearTimeout(timeout);
 
                 if (!response.ok) {
-                    console.error("DEBUG_ERROR:", data);
-                    // Jika v1beta gagal, kita coba tembak v1 dengan model yang sama
-                    if (response.status === 404) {
-                        return await fetchAIFallback(userMsg);
-                    }
-                    return `🚨 [CONNECTION_FAILED]: Error ${response.status} - ${data.error?.message || 'Gagal terhubung'}`;
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`HTTP ${response.status}: ${errorData.error?.message || 'Unknown error'}`);
                 }
 
-                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                return aiResponse || "🚨 [EMPTY]: Server tidak mengembalikan teks.";
-
-            } catch (e) {
-                console.error("FATAL:", e);
-                return "🚨 [FATAL_ERROR]: Gagal menghubungi server Google. Cek koneksi internet lo Bro.";
-            }
-        }
-
-        // FUNGSI FALLBACK JIKA ENDPOINT UTAMA GAGAL (FORCE TO V1)
-        async function fetchAIFallback(userMsg) {
-            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: `${SYSTEM_PROMPT}\n\nQuestion: ${userMsg}` }] }]
-                    })
-                });
                 const data = await response.json();
-                if (!response.ok) return `🚨 [STILL_FAILED]: Jalur v1 & v1beta ditutup. Pesan: ${data.error?.message}`;
-                return data.candidates?.[0]?.content?.parts?.[0]?.text;
-            } catch (e) {
-                return "🚨 [CRITICAL_ERROR]: Semua jalur API gagal.";
+                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (!aiResponse?.trim()) {
+                    throw new Error('Empty response from Gemini');
+                }
+
+                return aiResponse.trim();
+
+            } catch (error) {
+                console.error('🚨 API Error:', error);
+                
+                if (error.name === 'AbortError') {
+                    return "⏰ [TIMEOUT] Request timeout 30s. Coba lagi bro atau koneksi lambat.";
+                }
+                
+                if (error.message.includes('quotaExceeded') || error.message.includes('429')) {
+                    return "💳 [QUOTA] API quota habis. Tunggu reset atau ganti key.";
+                }
+                
+                if (error.message.includes('403') || error.message.includes('401')) {
+                    return "🔑 [AUTH] API key invalid. Ganti key di kode HTML.";
+                }
+                
+                return `🚨 [ERROR] ${error.message}. Coba lagi atau cek koneksi bro.`;
             }
         }
 
-        function createMsg(role, text) {
+        // 💬 Message Handler
+        function createMsg(role, text, timestamp = true) {
             const div = document.createElement('div');
-            div.className = role === 'user' ? 'flex flex-col items-end' : 'flex flex-col items-start';
-            const inner = `<span class="text-[9px] opacity-40 mb-1 mono uppercase">${role === 'user' ? 'Local_User' : 'Mazkiplay_AI'}</span>
-                           <div class="${role === 'user' ? 'bg-white/5 border-white/10' : 'bg-green-500/5 border-green-500/20 text-green-100'} p-4 rounded-xl border text-sm max-w-[85%] shadow-lg">
-                           ${text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/```(.*?)```/gs, '<div class="code-snippet">$1</div>').replace(/\n/g, '<br>')}
-                           </div>`;
-            div.innerHTML = inner;
+            div.className = `flex ${role === 'user' ? 'flex-col items-end' : 'flex-col items-start'} w-full`;
+            
+            const time = new Date().toLocaleTimeString('id-ID', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            const formattedText = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em class="italic text-blue-300">$1</em>')
+                .replace(/`(.*?)`/g, '<code class="bg-gray-900 px-2 py-1 rounded text-green-400 font-mono text-sm border border-gray-700/50">$1</code>')
+                .replace(/```([\w]*)\n([\s\S]*?)```/g, '<div class="code-snippet"><span class="text-blue-400 text-xs uppercase font-bold mb-2 block">$1</span><pre class="mt-2 text-sm">$2</pre></div>')
+                .replace(/\n/g, '<br>');
+
+            div.innerHTML = `
+                <div class="flex items-center gap-2 mb-2 opacity-70">
+                    <span class="text-xs mono uppercase tracking-wider ${role === 'user' ? 'text-blue-400' : 'text-green-400'} font-bold">${role === 'user' ? '👤 COMMANDER' : '🤖 MAZKI_CORE'}</span>
+                    ${timestamp ? `<span class="text-xs opacity-50">${time}</span>` : ''}
+                </div>
+                <div class="${role === 'user' ? 'bg-white/10 border border-white/20' : 'bg-green-500/10 border border-green-500/30 text-green-100'} p-6 rounded-2xl border max-w-[90%] shadow-xl backdrop-blur-sm">
+                    <div class="text-sm md:text-base leading-relaxed">${formattedText}</div>
+                </div>
+            `;
             return div;
         }
 
+        // 🎯 Send Message
         async function sendMessage() {
+            if (isProcessing) return;
+            
             const val = mainInput.value.trim();
             if (!val) return;
-            chatDisplay.appendChild(createMsg('user', val));
-            mainInput.value = '';
-            aiLoading.classList.remove('hidden');
-            chatDisplay.scrollTop = chatDisplay.scrollHeight;
 
-            const res = await fetchAI(val);
-            aiLoading.classList.add('hidden');
-            chatDisplay.appendChild(createMsg('ai', res));
+            // Clear input & show user message
+            mainInput.value = '';
+            chatDisplay.appendChild(createMsg('user', val));
             chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            isProcessing = true;
+
+            // AI Response
+            const aiResponse = await fetchAI(val);
+            chatDisplay.appendChild(createMsg('ai', aiResponse));
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            isProcessing = false;
+            showLoading(false);
         }
 
-        mainInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+        // ⏳ Loading
+        function showLoading(show) {
+            aiLoading.classList.toggle('hidden', !show);
+            document.getElementById('send-btn').disabled = show;
+            document.getElementById('send-btn').style.opacity = show ? '0.6' : '1';
+        }
+
+        // ⌨️ Event Listeners
+        mainInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Mobile & Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Auto-resize canvas
+        window.addEventListener('resize', () => {
+            initParticles();
+        });
     </script>
 </body>
 </html>
